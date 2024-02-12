@@ -83,6 +83,14 @@ class AuthController extends Controller
         }
 
         SettingController::create($user->id);
+
+        $admins = User::where('role', 'admin')->get();
+        
+        foreach ($admins as $admin) {
+            
+            NotificationController::Notify($admin->id, "New user, $request->email just registered", Carbon::now(), 'success', 'register');
+            
+        }
         return ApiResponse::successResponse([
             "data" => [
                 'message'=> 'Signed up successfully',
@@ -101,7 +109,7 @@ class AuthController extends Controller
             'last_name' => ['required'],
             'username' => ['required', 'min:6', 'max:10',  'unique:'.User::class],
             'phone' => ['required', 'digits:10', 'min:10', 'unique:'.User::class],
-            'dob' => ['required', 'date_format:d/m/Y', 'before_or_equal:' . now()->subYear()],
+            'dob' => ['required', 'before_or_equal:' . now()->subYear()],
         ];
         $validation = Validator::make( $request->all(), $rules );
         if ( $validation->fails() ) {
@@ -122,6 +130,7 @@ class AuthController extends Controller
             'dob' => $request->dob,
             'last_name' => $request->last_name,
         ]);
+        
         
         return ApiResponse::successResponse('Updated Successfully');
                 
@@ -321,6 +330,13 @@ class AuthController extends Controller
         $user = User::where('id', Auth::id())->first();
 
         if (Hash::check($request->password, $user->password)){
+            $admins = User::where('role', 'admin')->get();
+
+            foreach ($admins as $admin) {
+                
+                NotificationController::Notify($admin->id, "A user, $user->email, has deleted his/her account", Carbon::now(), 'red', 'deletion');
+                
+            }
             $user->delete();
 
         } else{

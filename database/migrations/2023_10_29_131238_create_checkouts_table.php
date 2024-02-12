@@ -25,9 +25,10 @@ return new class extends Migration
             $table->float('price', 12, 2);
             $table->float('slashed_price', 12, 2)->nullable();
             $table->float('amount_received', 12, 2)->nullable();
-            $table->boolean('is_verified')->nullable();
+            $table->boolean('is_verified')->default(false);
             $table->string('payment_id')->nullable();
             $table->string('pay_ref')->nullable();
+            $table->string('sender_name')->nullable();
             $table->string('address')->nullable();
             $table->string('street')->nullable();
             $table->string('lga')->nullable();

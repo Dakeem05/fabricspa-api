@@ -86,7 +86,7 @@ class DescriptionController extends Controller
         
         return response()->json([
             'description' => $description,
-            'notification' => NotificationController::Notify(Auth::id(), "You've successfully added a service to your cart, go to cart and checkout your service. You ordered for '$feature->name Service' and your billing price is ₦$request->price.00.", Carbon::now(), 'success'),
+            'notification' => NotificationController::Notify(Auth::id(), "You've successfully added a service to your cart, go to cart and checkout your service. You ordered for '$feature->name Service' and your billing price is ₦$request->price.00.", Carbon::now(), 'success', 'cart'),
             'cart' => $cart,
             'order' => $order,
         ]);    

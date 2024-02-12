@@ -37,10 +37,10 @@ class FeatureController extends Controller
     public function store(Request $request)
     {
         $rules = [
+            'filename' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'name' => ['required', 'unique:'.Feature::class],
             'price' => 'required|numeric',
             'contents' => 'array|required',
-            'filename' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'contents.*' => 'required|string',
         ];
 
@@ -89,7 +89,56 @@ class FeatureController extends Controller
     // return NotificationController::Notify(Auth::id(), 'New feature created successfully', Carbon::now(), 'success');
         return response()->json([
             'feature' => $feature,
-            'notification' => NotificationController::Notify(Auth::id(), 'New feature created successfully!!', Carbon::now(), 'success')
+            'notification' => NotificationController::Notify(Auth::id(), 'New feature created successfully!!', Carbon::now(), 'success', 'creation')
+        ]);    
+    }
+
+    public function edit(Request $request, string $id)
+    {
+        $rules = [
+            'name' => ['required'],
+            'price' => 'required|numeric',
+            'contents' => 'array|required',
+            'contents.*' => 'required|string',
+        ];
+
+        $validation = Validator::make($request->all(), $rules);
+        $validatedData = $request->all();
+        if ( $validation->fails() ) {
+            return ApiResponse::validationError([
+                    "message" => $validation->errors()->first()
+            ]);
+        }
+            // foreach ($validatedData['features'] as $feature) {
+                
+            //     $imagee = $request->name.time().'.'.$feature['filename']->getClientOriginalName();
+            //     $destinationPathh = public_path().'uploads/images';
+            //     $feature['filename']->move($destinationPathh, $imagee);
+            //     $path = $destinationPathh.$imagee;
+              
+            //     $fetut[] = [
+            //         'name' => $feature['name'],
+            //         'image' => $imagee,
+            //         'path' => $path
+            //     ];
+                
+            // }
+        $contents = [];
+        foreach ($request->only('contents') as $content) {
+            $contents[] = $content;
+        }
+
+
+
+        Feature::where('id', $id)->update([
+            'name' => $request->name,
+            'price' =>  $request->price,
+            'contents' => $contents
+        ]);
+
+    // return NotificationController::Notify(Auth::id(), 'New feature created successfully', Carbon::now(), 'success');
+        return response()->json([
+            'notification' => NotificationController::Notify(Auth::id(), 'Feature updated successfully!!', Carbon::now(), 'success', 'update')
         ]);    
     }
 
@@ -102,13 +151,6 @@ class FeatureController extends Controller
         return new FeaturesCollection($feature);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.

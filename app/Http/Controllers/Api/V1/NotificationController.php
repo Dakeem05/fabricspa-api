@@ -17,12 +17,13 @@ class NotificationController extends Controller
         return new NotificationCollection($notifications);
     }
 
-    public static function Notify ($id, $message, $time, $type) {
+    public static function Notify ($id, $message, $time, $type, $category) {
 		$notify = Notification::create([
             'user_id' => $id,
             'message' => $message,
             'time' => $time,
-            'type' => $type
+            'type' => $type,
+            'category' => $category,
         ]);
         return $notify; 
 	}

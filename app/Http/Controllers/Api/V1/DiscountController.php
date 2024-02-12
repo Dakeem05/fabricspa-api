@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Helper\V1\ApiResponse;
+use App\Http\Resources\Api\V1\DiscountCollection;
 use App\Models\Cart;
 use App\Models\Discount;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +23,8 @@ class DiscountController extends Controller
      */
     public function index()
     {
-        //
+        $discounts = Discount::all();
+        return new DiscountCollection($discounts);
     }
 
     /**
@@ -60,6 +63,15 @@ class DiscountController extends Controller
             'expiration_date' =>  $request->expiration_date,
             'code' =>  $request->code,
         ]);
+
+        $admins = User::where('role', 'admin')->get();
+
+        foreach ($admins as $admin) {
+            
+            NotificationController::Notify($admin->id, "An admin has just created a discount code of $request->code ", Carbon::now(), 'success', 'discount');
+            
+        }
+
         return $discount;    
     }
 
@@ -205,6 +217,7 @@ class DiscountController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        Discount::findOrFail($id)->delete();
+        return ApiResponse::successResponse('deleted');
     }
 }

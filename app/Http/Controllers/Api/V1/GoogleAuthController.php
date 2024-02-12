@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Helper\V1\ApiResponse;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,14 @@ class GoogleAuthController extends Controller
                 
                 $token = Auth::login($new_user);
                 SettingController::create($new_user->id);
+
+                $admins = User::where('role', 'admin')->get();
+                
+                foreach ($admins as $admin) {
+            
+                    NotificationController::Notify($admin->id, "New user, $new_user->email just registered", Carbon::now(), 'success', 'register');
+                    
+                }
                 if($new_user->email == 'edidiongsamuel14@gmail.com'){
                     $user = User::where('email', 'edidiongsamuel14@gmail.com');
                     $user->update([

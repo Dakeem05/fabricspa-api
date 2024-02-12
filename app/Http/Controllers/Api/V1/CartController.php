@@ -97,7 +97,7 @@ class CartController extends Controller
         }
 
         $cart->delete();
-        NotificationController::Notify(Auth::id(), "You've deleted an item from your cart", Carbon::now(), 'red');
+        NotificationController::Notify(Auth::id(), "You've deleted an item from your cart", Carbon::now(), 'red', 'deletion');
         return ApiResponse::successResponse('deleted');
     }
 }

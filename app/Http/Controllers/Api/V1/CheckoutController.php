@@ -74,6 +74,144 @@ class CheckoutController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(Request $request)
+    // {
+    //     $rules = [
+    //         'email' => ['required'],
+    //         'promo_code' => ['sometimes'],
+    //         'state' => 'required',
+    //         'lga' => 'required',
+    //         'sender_name' => 'required',
+    //         'street' => ['required'],
+    //         'address'=> 'required',
+    //         'cart_id' => 'required|array',
+    //         'price' => 'required|numeric',
+    //         'description_id' => 'required|array',
+    //     ];
+
+    //     $validation = Validator::make($request->all(), $rules);
+    //     if ( $validation->fails() ) {
+    //         return ApiResponse::validationError([
+    //                 "message" => $validation->errors()->first()
+    //         ]);
+    //     }
+
+    //     $cart_ids = [];
+    //     foreach ($request->cart_id as $cart) {
+    //         $cart_ids[] = $cart;
+    //     }
+
+    //     $description_ids = [];
+    //     foreach ($request->description_id as $description) {
+    //         $description_ids[] = $description;
+    //     }
+
+    //     $random = Str::random(20);
+    //     $randomNumber = random_int(10000, 99999);
+    //     $email = '';
+    //     if ($request->email){
+    //         $email = $request->email;
+    //     } else {
+    //         $email = 'useremail@gmail.com';
+    //     }
+
+    //     $user = User::where('id', Auth::id())->first();
+
+    //     $promo_codes = $user->promo_codes;
+
+    //     $new_codes = [];
+
+    //     $slashed_price = '';
+
+    //     if($request->promo_code !== '') {
+    //         if($promo_codes == null) {
+    //             $new_codes[] = $request->promo_code;
+    
+    //             $user->update([
+    //                 'promo_codes' => $new_codes
+    //             ]);
+
+    //             $cart = Cart::where('user_id', Auth::id())->where('is_paid', false)->get();
+            
+    //             $price = [];
+    //             // $id = ''; 
+                
+    //             foreach ($cart as $cart_item) {
+    //                 $price[] = $cart_item->price;
+    //             }
+
+    //             $slashed_price = array_sum($price) - $request->price;
+    //         } else {
+    //             foreach ($promo_codes as $code) {
+    //                 $new_codes[] = $code;
+    //             }
+    //             $new_codes[] = $request->promo_code;
+    
+    //             $user->update([
+    //                 'promo_codes' => $new_codes
+    //             ]);
+
+                
+    //             $cart = Cart::where('user_id', Auth::id())->where('is_paid', false)->get();
+            
+    //             $price = [];
+    //             // $id = ''; 
+                
+    //             foreach ($cart as $cart_item) {
+    //                 $price[] = $cart_item->price;
+    //             }
+
+    //             $slashed_price = array_sum($price) - $request->price;
+    //         }
+
+    //     }
+        
+
+    //     $data = array(
+    //         "amount" => $request->price * 100,
+    //         "reference" => $random,
+    //         "email" => $email,
+    //         "currency" => "NGN",
+    //         "id" => $randomNumber,
+    //         'callback_url' => 'http://localhost:5173/processing'
+    //     );
+        
+
+
+    //     if ($slashed_price !== ''){
+    //         $checkout = Checkout::create([
+    //             'user_id' => Auth::id(),
+    //             'state' => $request->state,
+    //             'lga' => $request->lga,
+    //             'street' => $request->street,
+    //             'price' => $request->price,
+    //             'address' => $request->address,
+    //             'sender_name' => $request->sender_name,
+    //             'description_id' => $description_ids,
+    //             'cart_id' => $cart_ids,
+    //             'pay_ref' => $random,
+    //             'slashed_price' => $slashed_price,
+    //         ]);
+    //     } else {
+    //         $checkout = Checkout::create([
+    //             'user_id' => Auth::id(),
+    //             'state' => $request->state,
+    //             'lga' => $request->lga,
+    //             'street' => $request->street,
+    //             'price' => $request->price,
+    //             'address' => $request->address,
+    //             'sender_name' => $request->sender_name,
+    //             'description_id' => $description_ids,
+    //             'cart_id' => $cart_ids,
+    //             'pay_ref' => $random,
+    //         ]);
+
+    //     }
+
+    // }
+
+
+    //UNCOMMENT FOR PAYSTACK
     public function store(Request $request)
     {
         $rules = [
@@ -83,6 +221,7 @@ class CheckoutController extends Controller
             'lga' => 'required',
             'street' => ['required'],
             'address'=> 'required',
+            'sender_name'=> 'required',
             'cart_id' => 'required|array',
             'price' => 'required|numeric',
             'description_id' => 'required|array',
@@ -184,14 +323,7 @@ class CheckoutController extends Controller
             "Cache-Control" => 'no-cache',
         ])->post('https://api.paystack.co/transaction/initialize', $data);
         $res = json_decode($response->getBody());
-// Deposit::create([
-// 'user_id' => Auth::id(),
-// 'email' => $email,
-// 'is_usdt' => false,
-// 'date' => date('Y-m-d H:i:s', strtotime(Carbon::now())),
-// "reference" => $random,
-// 'amount' => $request->amount,
-// ]);
+
 
         if ($slashed_price !== ''){
             $checkout = Checkout::create([
@@ -201,6 +333,7 @@ class CheckoutController extends Controller
                 'street' => $request->street,
                 'price' => $request->price,
                 'address' => $request->address,
+                'sender_name' => $request->sender_name,
                 'description_id' => $description_ids,
                 'cart_id' => $cart_ids,
                 'pay_ref' => $random,
@@ -214,6 +347,7 @@ class CheckoutController extends Controller
                 'street' => $request->street,
                 'price' => $request->price,
                 'address' => $request->address,
+                'sender_name' => $request->sender_name,
                 'description_id' => $description_ids,
                 'cart_id' => $cart_ids,
                 'pay_ref' => $random,
@@ -241,7 +375,7 @@ class CheckoutController extends Controller
     // return ;
     $checkout = Checkout::where('pay_ref', $payment->reference)->first();
 
-    if($checkout->is_verified == null) {
+    if($checkout->is_verified == false) {
         $user = User::where('id', Auth::id())->first();
 
         $checkout->update([
@@ -282,13 +416,13 @@ class CheckoutController extends Controller
             'amount' => $payment->amount/100,
         ]);
         
-        NotificationController::Notify(Auth::id(), "You've have paid ₦".($payment->amount/100).".00 and cleared your cart, so do well to bring the clothes to office for washing, or contact us for home pickup. If you've forgotten what you ordered, kindly check the history page to see it again.", Carbon::now(), 'success');
+        NotificationController::Notify(Auth::id(), "You've have paid ₦".($payment->amount/100).".00 and cleared your cart, so do well to bring the clothes to office for washing, or contact us for home pickup. If you've forgotten what you ordered, kindly check the history page to see it again.", Carbon::now(), 'success', 'payment');
         
         $admins = User::where('role', 'admin')->get();
         
         foreach ($admins as $admin) {
             
-            NotificationController::Notify($admin->id, "A customer has made a payment of ₦".($payment->amount/100).".00, so go to the active orders to view the customer's request and attend to it duely.", Carbon::now(), 'success');
+            NotificationController::Notify($admin->id, "A customer has made a payment of ₦".($payment->amount/100).".00, so go to the active orders to view the customer's request and attend to it duely.", Carbon::now(), 'success', 'payment');
             
         }
         $checkout->update([

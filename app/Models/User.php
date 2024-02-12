@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Notifications\Api\V1\ApiResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -79,6 +80,11 @@ class User extends Authenticatable implements JWTSubject
         'promo_codes' =>'object'
         // 'dob' => 'date',
     ];
+
+    public function orders (): HasMany
+    {
+        return $this->hasMany(Order::class, 'user_id', 'id');
+    }
 
     public function getJWTIdentifier()
     {
