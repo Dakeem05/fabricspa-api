@@ -1,0 +1,99 @@
+name: Deploy Laravel Project To Fabricspa
+on:
+  push: 
+    branches:
+      - main
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:latest
+        ports:
+          - 3306
+        env:
+          MYSQL_USER: ${{ secrets.DB_USERNAME }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          tools: composer
+      - name: Get the latest code
+        uses: actions/checkout@v2.3.2
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Add Environment Variables to .env
+        run: |
+          echo "" >> .env  # Add a newline to avoid concatenation
+          echo "APP_NAME=${{ vars.APP_NAME }}" >> .env
+          echo "APP_URL=${{ vars.APP_URL }}" >> .env
+          echo "" >> .env  # Add a newline to avoid concatenation
+          echo "MAIL_MAILER=${{ vars.MAIL_MAILER }}" >> .env
+          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
+          echo "MAIL_PORT=${{ vars.MAIL_PORT }}" >> .env
+          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+          echo 'MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"' >> .env
+          echo "MAIL_ENCRYPTION=${{ vars.MAIL_ENCRYPTION }}" >> .env
+          echo 'MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}' >> .env
+          echo "MAIL_FROM_NAME=${{ vars.MAIL_FROM_NAME }}" >> .env
+          echo "" >> .env  # Add a newline to avoid concatenation
+          echo "DB_CONNECTION=${{ vars.DB_CONNECTION }}" >> .env
+          echo "DB_HOST=${{ vars.DB_HOST }}" >> .env
+          echo 'DB_PORT=${{ vars.DB_PORT }}' >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "" >> .env  # Add a newline to avoid concatenation
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "" >> .env  # Add a newline to avoid concatenation
+          echo "PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}" >> .env
+          echo "PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}" >> .env
+          echo "PAYSTACK_PAYMENT_URL=${{ vars.PAYSTACK_PAYMENT_URL }}" >> .env
+          echo "MERCHANT_EMAIL=${{ vars.MERCHANT_EMAIL }}" >> .env
+      - name: Install Dependencies
+        run: composer update --ignore-platform-reqs
+      - name: Generate key
+        run: php artisan key:generate
+      - name: Generate JWT Key
+        run: php artisan jwt:secret
+      - name: Generate storage link
+        run: php artisan storage:link
+      - name: Directory Permissions
+        run: chmod -R 777 storage bootstrap/cache
+      - name: Execute PHPUnit tests
+        env:
+          DB_CONNECTION: ${{ vars.DB_CONNECTION }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          php artisan migrate:fresh --seed
+          ./vendor/bin/phpunit 
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{secrets.FTP_SERVER}}
+          username: ${{secrets.FTP_USERNAME}}
+          password: ${{secrets.FTP_PASSWORD}}
+      - name: Clear config cache
+        run: php artisan config:clear
+      - name: Cache config
+        run: php artisan config:cache
+      - name: Clear view cache
+        run: php artisan view:clear
+      - name: Clear route cache
+        run: php artisan route:clear
+      - name: Clear route cache
+        run: php artisan route:clear
+      - name: Optimize
+        run: php artisan optimize
